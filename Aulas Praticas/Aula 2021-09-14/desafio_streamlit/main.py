@@ -11,8 +11,9 @@ from sklearn.preprocessing import LabelEncoder
 st.write(
 """ 
 # Tópicos Especiais em IA - Aula 14/09/2021
+- Pedro Vitor Marques Nascimento
 
-- Naive Bayes aplicado no Iris
+## Algoritmo Naive Bayes aplicado no dataset Iris
 """)
 
 dataset = datasets.load_iris()
@@ -23,50 +24,63 @@ y_dataset = pd.DataFrame(dataset.target, columns=['tipo'])
 st.sidebar.header("Parâmetros")
 
 def input_feature_selection():
-    X_name = st.sidebar.selectbox("Atributo", options=list(X_dataset.columns))
     y_name = st.sidebar.selectbox("Alvo", options=list(y_dataset.columns))
 
-    return X_name, y_name
+    features = {}
+    for column in X_dataset.columns:
+        features[column] = st.sidebar.checkbox("Incluir {}".format(column))
+
+    X_selected = []
+    for feature_key in features.keys():
+        if features[feature_key] == True:
+            X_selected.append(feature_key)
+
+    return X_selected, y_name
  
-def input_features(feature):
+def input_features(features):
     data = dict()
 
-    _min = float(X_dataset.describe()[feature][3])
-    _max = float(X_dataset.describe()[feature][7])
+    for feature in features:
+        _min = float(X_dataset.describe()[feature][3])
+        _max = float(X_dataset.describe()[feature][7])
 
-    data[feature] = st.sidebar.slider(feature, min_value=_min, max_value=_max)
+        data[feature] = st.sidebar.slider(feature, min_value=_min, max_value=_max)
 
     return pd.DataFrame(data, index=[0])
 
-X_name, y_name = input_feature_selection()
-df = input_features(X_name)
- 
-st.subheader("Parâmetros inseridos")
-st.write(df)
+X_selected, y_name = input_feature_selection()
 
-X = X_dataset[[X_name]]
-y = y_dataset[[y_name]]
+if len(X_selected) == 0:
+    st.error("Selecione pelo menos uma feature na aba lateral!")
+else:
+    df = input_features(X_selected)
+    
+    st.subheader("Parâmetros inseridos")
+    st.write(df)
 
-X_train,X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state =1)
-model = GaussianNB()
+    X = X_dataset[X_selected]
+    y = y_dataset[[y_name]]
 
-model.fit(X_train,y_train)
-predictions = model.predict(X_test)
+    X_train,X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state =1)
+    model = GaussianNB()
 
-st.subheader("Avaliação do Modelo:")
+    model.fit(X_train,y_train)
+    predictions = model.predict(X_test)
 
-st.write(
-    pd.DataFrame(data={
-        'rotulos':dataset.target_names,
-        'precision':precision_score(y_test, predictions, average=None),
-        'recall':recall_score(y_test, predictions, average=None),
-        'accuracy':accuracy_score(y_test, predictions)
-    })
-)
- 
-st.subheader("Predição do Modelo")
+    st.subheader("Avaliação do Modelo:")
 
-prediction = model.predict(df)
-pred_class = dataset.target_names[prediction]
+    st.write(
+        pd.DataFrame(data={
+            'rotulos':dataset.target_names,
+            'precision':precision_score(y_test, predictions, average=None),
+            'recall':recall_score(y_test, predictions, average=None),
+            'accuracy':accuracy_score(y_test, predictions)
+        })
+    )
+    
+    st.subheader("Predição do Modelo")
 
-st.write(pred_class)
+    prediction = model.predict(df)
+    pred_class = dataset.target_names[prediction]
+
+    st.write(pred_class)
