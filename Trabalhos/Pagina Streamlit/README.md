@@ -1,4 +1,6 @@
-# Modelo Naive Bayes aplicado no Dataset Iris
+# Trabalho 2
+- Pedro Marques
+- Tomaz Cuber
 
 ## Como Rodar
 - Rode `pip3 install -r requirements.txt`
